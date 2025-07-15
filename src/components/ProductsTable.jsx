@@ -21,6 +21,10 @@ import ClearIcon from "@mui/icons-material/Clear";
 import IconButton from "@mui/material/IconButton";
 import { fetchWithRetry } from "../utils/fetchWithRetry";
 import Rating from "@mui/material/Rating";
+import Tooltip from "@mui/material/Tooltip";
+import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
+import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
+import React from "react";
 
 const DEBOUNCE_DELAY = 400;
 const DEFAULT_ORDER_BY = "title";
@@ -38,6 +42,47 @@ function formatPrice(price) {
 function getQueryParam(searchParams, key, fallback) {
   const value = searchParams.get(key);
   return value !== null ? value : fallback;
+}
+
+function CustomPaginationActions(props) {
+  const { count, page, rowsPerPage, onPageChange } = props;
+
+  const handleBack = (event) => {
+    onPageChange(event, page - 1);
+  };
+
+  const handleNext = (event) => {
+    onPageChange(event, page + 1);
+  };
+
+  return (
+    <>
+      <Tooltip title="Previous Page">
+        <span>
+          <IconButton
+            onClick={handleBack}
+            disabled={page === 0}
+            aria-label="previous page"
+            size="small"
+          >
+            <KeyboardArrowLeft />
+          </IconButton>
+        </span>
+      </Tooltip>
+      <Tooltip title="Next Page">
+        <span>
+          <IconButton
+            onClick={handleNext}
+            disabled={page >= Math.ceil(count / rowsPerPage) - 1}
+            aria-label="next page"
+            size="small"
+          >
+            <KeyboardArrowRight />
+          </IconButton>
+        </span>
+      </Tooltip>
+    </>
+  );
 }
 
 export default function ProductsTable() {
@@ -237,20 +282,31 @@ export default function ProductsTable() {
             <TableRow>
               {headCells.map((headCell) => (
                 <TableCell align={headCell.align} key={headCell.id}>
-                  <TableSortLabel
-                    active={orderBy === headCell.id}
-                    direction={orderBy === headCell.id ? order : "asc"}
-                    onClick={() => onSort(headCell.id)}
+                  <Tooltip
+                    title={
+                      orderBy === headCell.id
+                        ? `Sorted ${order === "asc" ? "ascending" : "descending"}`
+                        : "Sort"
+                    }
+                    arrow
                   >
-                    {headCell.label}
-                    {orderBy === headCell.id ? (
-                      <Box component="span" sx={visuallyHidden}>
-                        {order === "desc"
-                          ? "sorted descending"
-                          : "sorted ascending"}
-                      </Box>
-                    ) : null}
-                  </TableSortLabel>
+                    <span>
+                      <TableSortLabel
+                        active={orderBy === headCell.id}
+                        direction={orderBy === headCell.id ? order : "asc"}
+                        onClick={() => onSort(headCell.id)}
+                      >
+                        {headCell.label}
+                        {orderBy === headCell.id ? (
+                          <Box component="span" sx={visuallyHidden}>
+                            {order === "desc"
+                              ? "sorted descending"
+                              : "sorted ascending"}
+                          </Box>
+                        ) : null}
+                      </TableSortLabel>
+                    </span>
+                  </Tooltip>
                   {headCell.id === "category" && (
                     <ProductCategoryFilter
                       categories={categories}
@@ -306,7 +362,11 @@ export default function ProductsTable() {
                     {formatPrice(product.price)}
                   </TableCell>
                   <TableCell align="right">
-                    <Rating value={product.rating} precision={0.01} readOnly />
+                    <Tooltip title={`${product.rating} out of 5`} placement="top" arrow>
+                      <span>
+                        <Rating value={product.rating} precision={0.01} readOnly />
+                      </span>
+                    </Tooltip>
                   </TableCell>
                 </TableRow>
               ))
@@ -325,6 +385,7 @@ export default function ProductsTable() {
           setRowsPerPage(parseInt(e.target.value, 10));
           setPage(0);
         }}
+        ActionsComponent={CustomPaginationActions}
       />
     </>
   );

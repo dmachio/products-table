@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Autocomplete, Box, Popover, Paper, TextField, IconButton } from "@mui/material";
+import { Autocomplete, Box, Popover, Paper, TextField, IconButton, Tooltip } from "@mui/material";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import FilterListIcon from "@mui/icons-material/FilterList";
 
@@ -21,14 +21,18 @@ export default function ProductCategoryFilter({
 
   return (
     <>
-      <IconButton
-        color="default"
-        onClick={(e) => setAnchorEl(e.currentTarget)}
-        size="small"
-        aria-label="Filter categories"
-      >
-        {selectedCategory ? <FilterAltIcon /> : <FilterListIcon />}
-      </IconButton>
+      <Tooltip title="Filter by category" arrow>
+        <span>
+          <IconButton
+            color="default"
+            onClick={(e) => setAnchorEl(e.currentTarget)}
+            size="small"
+            aria-label="Filter categories"
+          >
+            {selectedCategory ? <FilterAltIcon /> : <FilterListIcon />}
+          </IconButton>
+        </span>
+      </Tooltip>
       <Popover
         id="filter-popover"
         open={Boolean(anchorEl)}
