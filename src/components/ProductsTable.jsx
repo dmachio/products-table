@@ -12,11 +12,9 @@ import {
   Box,
   TextField,
   InputAdornment,
-  CircularProgress,
   Typography,
 } from "@mui/material";
 import { visuallyHidden } from "@mui/utils";
-import ProductCategoryFilter from "./ProductCategoryFilter";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import IconButton from "@mui/material/IconButton";
@@ -27,6 +25,10 @@ import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
 import React from "react";
 import Skeleton from "@mui/material/Skeleton";
+import FilterAltIcon from "@mui/icons-material/FilterAlt";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import Popover from "@mui/material/Popover";
+import Autocomplete from "@mui/material/Autocomplete";
 
 const DEBOUNCE_DELAY = 400;
 const DEFAULT_ORDER_BY = "title";
@@ -83,6 +85,85 @@ function CustomPaginationActions(props) {
           </IconButton>
         </span>
       </Tooltip>
+    </>
+  );
+}
+
+function ProductCategoryFilter({
+  categories,
+  categoriesBySlug,
+  selectedCategory,
+  setSelectedCategory,
+  setPage,
+}) {
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const inputRef = React.useRef(null);
+
+  const handlePopoverEntered = () => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
+  return (
+    <>
+      <Tooltip title="Filter by category" arrow>
+        <span>
+          <IconButton
+            color="default"
+            onClick={(e) => setAnchorEl(e.currentTarget)}
+            size="small"
+            aria-label="Filter categories"
+          >
+            {selectedCategory ? <FilterAltIcon /> : <FilterListIcon />}
+          </IconButton>
+        </span>
+      </Tooltip>
+      <Popover
+        id="filter-popover"
+        open={Boolean(anchorEl)}
+        anchorEl={anchorEl}
+        onClose={() => setAnchorEl(null)}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "left",
+        }}
+        slotProps={{
+          transition: { onEntered: handlePopoverEntered },
+        }}
+      >
+        <Box>
+          <Paper>
+            <Autocomplete
+              openOnFocus
+              options={categories.map((category) => ({
+                id: category.slug,
+                label: category.name,
+              }))}
+              sx={{ width: 300 }}
+              value={
+                selectedCategory && categoriesBySlug[selectedCategory]
+                  ? { id: selectedCategory, label: categoriesBySlug[selectedCategory].name }
+                  : null
+              }
+              isOptionEqualToValue={(option, value) =>
+                option.id === value.id
+              }
+              onChange={(_, value) => {
+                setSelectedCategory(value ? value.id : null);
+                setPage(0);
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Product Category"
+                  inputRef={inputRef}
+                />
+              )}
+            />
+          </Paper>
+        </Box>
+      </Popover>
     </>
   );
 }
