@@ -160,7 +160,7 @@ function ProductsTableBody({ products, categoriesBySlug }) {
             {product.title}
           </TableCell>
           <TableCell sx={{ minWidth: 160, maxWidth: 240, width: 200 }}>
-            {categoriesBySlug[product.category]?.name}
+            {categoriesBySlug[product.category]?.name ?? product.category}
           </TableCell>
           <TableCell align="right">{formatPrice(product.price)}</TableCell>
           <TableCell align="right">
@@ -234,6 +234,7 @@ function ProductsTableHead({
   categoriesBySlug,
   selectedCategory,
   onCategoryChange,
+  categoriesLoaded,
 }) {
   // Popover state for category filter
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -273,7 +274,7 @@ function ProductsTableHead({
                 </TableSortLabel>
               </span>
             </Tooltip>
-            {headCell.id === "category" && (
+            {headCell.id === "category" && categoriesLoaded && (
               <>
                 <Tooltip title="Filter by category" arrow>
                   <span>
@@ -485,9 +486,7 @@ export default function ProductsTable() {
   const [tableState, setTableState] = useState({
     orderBy: getQueryParam(searchParams, "orderBy", DEFAULT_ORDER_BY),
     order: getQueryParam(searchParams, "order", DEFAULT_ORDER),
-    page: Number(
-      getQueryParam(searchParams, "page", DEFAULT_PAGE)
-    ),
+    page: Number(getQueryParam(searchParams, "page", DEFAULT_PAGE)),
     rowsPerPage: Number(
       getQueryParam(searchParams, "rowsPerPage", DEFAULT_ROWS_PER_PAGE)
     ),
@@ -499,6 +498,7 @@ export default function ProductsTable() {
   const [products, setProducts] = useState([]);
   const [total, setTotal] = useState(0);
   const [categories, setCategories] = useState([]);
+  const [categoriesError, setCategoriesError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -506,11 +506,25 @@ export default function ProductsTable() {
   // Effects
   // ---------------------
   useEffect(() => {
-    fetch("https://dummyjson.com/products/categories")
+    setCategoriesError(false);
+    const abortController = new AbortController();
+    fetchWithRetry("https://dummyjson.com/products/categories", {
+      signal: abortController.signal,
+    })
       .then((response) => response.json())
       .then((data) => {
         setCategories(data);
+      })
+      .catch((error) => {
+        if (error.name === "AbortError") return;
+        setCategoriesError(true);
+        console.error("FetchingCategoriesFailed", {
+          error,
+        });
       });
+    return () => {
+      abortController.abort();
+    };
   }, []);
 
   useEffect(() => {
@@ -562,7 +576,6 @@ export default function ProductsTable() {
           setLoading(false);
         });
     }, DEBOUNCE_DELAY);
-
     return () => {
       clearTimeout(handler);
       abortController.abort();
@@ -656,6 +669,7 @@ export default function ProductsTable() {
             categoriesBySlug={categoriesBySlug}
             selectedCategory={selectedCategory}
             onCategoryChange={handleCategoryChange}
+            categoriesLoaded={!!categories.length && !categoriesError}
           />
           {tableBody}
         </Table>
