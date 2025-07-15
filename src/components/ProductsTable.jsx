@@ -289,8 +289,8 @@ export default function ProductsTable() {
           </Typography>
         )}
       </Box>
-      <TableContainer component={Paper}>
-        <Table sx={{ tableLayout: "fixed" }} aria-label="simple table">
+      <TableContainer component={Paper} sx={{ maxHeight: 500 }}>
+        <Table sx={{ tableLayout: "fixed" }} aria-label="simple table" stickyHeader>
           <TableHead>
             <TableRow>
               {headCells.map((headCell) => (
