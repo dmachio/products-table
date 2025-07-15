@@ -13,6 +13,7 @@ import {
   TextField,
   InputAdornment,
   CircularProgress,
+  Typography,
 } from "@mui/material";
 import { visuallyHidden } from "@mui/utils";
 import ProductCategoryFilter from "./ProductCategoryFilter";
@@ -25,6 +26,7 @@ import Tooltip from "@mui/material/Tooltip";
 import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
 import React from "react";
+import Skeleton from "@mui/material/Skeleton";
 
 const DEBOUNCE_DELAY = 400;
 const DEFAULT_ORDER_BY = "title";
@@ -188,7 +190,8 @@ export default function ProductsTable() {
   useEffect(() => {
     const params = new URLSearchParams();
     if (page !== DEFAULT_PAGE) params.set("page", page);
-    if (rowsPerPage !== DEFAULT_ROWS_PER_PAGE) params.set("rowsPerPage", rowsPerPage);
+    if (rowsPerPage !== DEFAULT_ROWS_PER_PAGE)
+      params.set("rowsPerPage", rowsPerPage);
     if (order !== DEFAULT_ORDER) params.set("order", order);
     if (orderBy !== DEFAULT_ORDER_BY) params.set("orderBy", orderBy);
     if (selectedCategory) params.set("category", selectedCategory);
@@ -227,6 +230,10 @@ export default function ProductsTable() {
       align: "right",
     },
   ];
+
+  // Pagination feedback calculation
+  const start = total === 0 ? 0 : page * rowsPerPage + 1;
+  const end = Math.min(total, (page + 1) * rowsPerPage);
 
   return (
     <>
@@ -273,11 +280,17 @@ export default function ProductsTable() {
         />
       </Box>
 
+      <Box sx={{ mb: 1, ml: 0.5, minHeight: 24 }}>
+        {loading ? (
+          <Skeleton variant="text" width={180} height={24} />
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            {`Showing ${start}–${end} of ${total} products`}
+          </Typography>
+        )}
+      </Box>
       <TableContainer component={Paper}>
-        <Table
-          sx={{ tableLayout: "fixed" }}
-          aria-label="simple table"
-        >
+        <Table sx={{ tableLayout: "fixed" }} aria-label="simple table">
           <TableHead>
             <TableRow>
               {headCells.map((headCell) => (
@@ -285,7 +298,9 @@ export default function ProductsTable() {
                   <Tooltip
                     title={
                       orderBy === headCell.id
-                        ? `Sorted ${order === "asc" ? "ascending" : "descending"}`
+                        ? `Sorted ${
+                            order === "asc" ? "ascending" : "descending"
+                          }`
                         : "Sort"
                     }
                     arrow
@@ -326,9 +341,11 @@ export default function ProductsTable() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={headCells.length} align="center">
-                  <CircularProgress />
-                </TableCell>
+                {headCells.map((headCell, idx) => (
+                  <TableCell key={headCell.id || idx} align={headCell.align}>
+                    <Skeleton variant="rectangular" height={32} />
+                  </TableCell>
+                ))}
               </TableRow>
             ) : errorMessage ? (
               <TableRow>
@@ -351,6 +368,7 @@ export default function ProductsTable() {
                 <TableRow
                   key={product.id}
                   sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                  hover
                 >
                   <TableCell component="th" scope="row">
                     {product.title}
@@ -362,9 +380,17 @@ export default function ProductsTable() {
                     {formatPrice(product.price)}
                   </TableCell>
                   <TableCell align="right">
-                    <Tooltip title={`${product.rating} out of 5`} placement="top" arrow>
+                    <Tooltip
+                      title={`${product.rating} out of 5`}
+                      placement="top"
+                      arrow
+                    >
                       <span>
-                        <Rating value={product.rating} precision={0.01} readOnly />
+                        <Rating
+                          value={product.rating}
+                          precision={0.01}
+                          readOnly
+                        />
                       </span>
                     </Tooltip>
                   </TableCell>
