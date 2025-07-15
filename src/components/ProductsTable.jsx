@@ -302,7 +302,7 @@ function ProductsTableHead({
                     transition: { onEntered: handlePopoverEntered },
                   }}
                 >
-                  <Box>
+                  <Box sx={{ p: 1 }}>
                     <Paper>
                       <Autocomplete
                         openOnFocus
@@ -329,6 +329,7 @@ function ProductsTableHead({
                         renderInput={(params) => (
                           <TextField
                             {...params}
+                            size="small"
                             label="Product Category"
                             inputRef={inputRef}
                           />
