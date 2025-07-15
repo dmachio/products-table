@@ -6,6 +6,15 @@ class FetchClientError extends Error {
   }
 }
 
+/**
+ * Fetches a resource with retry logic for network and 5xx errors, using exponential backoff.
+ * @param {RequestInfo | URL} input - The resource to fetch.
+ * @param {Object} [init] - The fetch options, including signal for aborting.
+ * @param {number} [retries=3] - Number of retry attempts.
+ * @param {number} [backoff=300] - Initial backoff delay in ms.
+ * @returns {Promise<Response>} The fetch response.
+ * @throws {Error} If all retries fail or a non-retriable error occurs.
+ */
 export async function fetchWithRetry(
   url,
   options = {},
