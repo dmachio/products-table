@@ -21,12 +21,11 @@ class ErrorBoundary extends React.Component {
   }
 
   render() {
-    const { componentName } = this.props;
     return this.state.hasError ? (
       <Box sx={{ p: 4, display: "flex", justifyContent: "center" }}>
         <Paper elevation={3} sx={{ maxWidth: 480, width: "100%", p: 4 }}>
           <Alert severity="error" sx={{ mb: 2 }}>
-            Sorry, something went wrong while loading {componentName ? `the ${componentName} section` : "this page"}. Please try again later.
+            Sorry, something went wrong while loading this page. Please try again later.
           </Alert>
         </Paper>
       </Box>
