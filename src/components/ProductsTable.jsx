@@ -412,12 +412,16 @@ function buildProductsUrl({
   } else {
     url = new URL("https://dummyjson.com/products");
   }
+
   url.searchParams.set("select", "id,title,category,price,rating");
+
   url.searchParams.set("limit", rowsPerPage);
   const skip = page * rowsPerPage;
   url.searchParams.set("skip", skip);
+
   url.searchParams.set("sortBy", orderBy);
   url.searchParams.set("order", order);
+
   return url;
 }
 
@@ -440,17 +444,36 @@ function syncUrlWithState({
   search,
 }) {
   const params = new URLSearchParams();
-  if (page !== DEFAULT_PAGE) params.set("page", page);
-  if (rowsPerPage !== DEFAULT_ROWS_PER_PAGE)
+
+  if (page !== DEFAULT_PAGE) {
+    params.set("page", page);
+  }
+
+  if (rowsPerPage !== DEFAULT_ROWS_PER_PAGE) {
     params.set("rowsPerPage", rowsPerPage);
-  if (order !== DEFAULT_ORDER) params.set("order", order);
-  if (orderBy !== DEFAULT_ORDER_BY) params.set("orderBy", orderBy);
-  if (selectedCategory) params.set("category", selectedCategory);
-  if (search.length >= 2) params.set("search", search);
+  }
+
+  if (order !== DEFAULT_ORDER) {
+    params.set("order", order);
+  }
+
+  if (orderBy !== DEFAULT_ORDER_BY) {
+    params.set("orderBy", orderBy);
+  }
+
+  if (selectedCategory) {
+    params.set("category", selectedCategory);
+  }
+
+  if (search.length >= 2) {
+    params.set("search", search);
+  }
+
   const newUrl =
     params.size > 0
       ? `${window.location.pathname}?${params.toString()}`
       : window.location.pathname;
+
   window.history.replaceState(null, "", newUrl);
 }
 
@@ -495,6 +518,7 @@ export default function ProductsTable() {
   // State
   // ---------------------
   const searchParams = new URLSearchParams(window.location.search);
+
   const [tableState, setTableState] = useState({
     orderBy: getQueryParam(searchParams, "orderBy", DEFAULT_ORDER_BY),
     order: getQueryParam(searchParams, "order", DEFAULT_ORDER),
@@ -505,8 +529,10 @@ export default function ProductsTable() {
     selectedCategory: getQueryParam(searchParams, "category", null),
     search: getQueryParam(searchParams, "search", ""),
   });
+
   const { orderBy, order, page, rowsPerPage, selectedCategory, search } =
     tableState;
+
   const [products, setProducts] = useState([]);
   const [total, setTotal] = useState(0);
   const [categories, setCategories] = useState([]);
@@ -553,6 +579,7 @@ export default function ProductsTable() {
 
     setLoading(true);
 
+    // Debounce the fetch to prevent multiple requests
     const handler = setTimeout(() => {
       fetchProducts({
         search,
@@ -611,13 +638,17 @@ export default function ProductsTable() {
     const value = e.target.value;
     setTableState((prev) => ({ ...prev, search: value, page: 0 }));
     if (value.length >= 2 && selectedCategory) {
+      // Clear category since API doesn't support search within a category
       setTableState((prev) => ({ ...prev, selectedCategory: null }));
     }
   };
 
   const handleCategoryChange = (cat) => {
     setTableState((prev) => ({ ...prev, selectedCategory: cat }));
-    if (cat) setTableState((prev) => ({ ...prev, search: "" }));
+    if (cat) {
+      // Clear search since API doesn't support search within a category
+      setTableState((prev) => ({ ...prev, search: "" }));
+    }
     setTableState((prev) => ({ ...prev, page: 0 }));
   };
 
