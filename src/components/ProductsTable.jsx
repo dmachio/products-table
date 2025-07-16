@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -226,6 +226,83 @@ function ProductsTablePaginationFeedback({ loading, start, end, total }) {
   );
 }
 
+function CategoryFilterPopover({
+  categories,
+  categoriesBySlug,
+  selectedCategory,
+  onCategoryChange,
+}) {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const inputRef = useRef(null);
+
+  const handlePopoverEntered = () => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
+  return (
+    <>
+      <Tooltip title="Filter by category" arrow>
+        <span>
+          <IconButton
+            color="default"
+            size="small"
+            aria-label="Filter categories"
+            onClick={(e) => setAnchorEl(e.currentTarget)}
+          >
+            {selectedCategory ? <FilterAltIcon /> : <FilterListIcon />}
+          </IconButton>
+        </span>
+      </Tooltip>
+      <Popover
+        id="filter-popover"
+        open={Boolean(anchorEl)}
+        anchorEl={anchorEl}
+        onClose={() => setAnchorEl(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+        slotProps={{
+          transition: { onEntered: handlePopoverEntered },
+        }}
+      >
+        <Box sx={{ p: 1 }}>
+          <Paper>
+            <Autocomplete
+              openOnFocus
+              options={categories.map((category) => ({
+                id: category.slug,
+                label: category.name,
+              }))}
+              sx={{ width: 300 }}
+              value={
+                selectedCategory && categoriesBySlug[selectedCategory]
+                  ? {
+                      id: selectedCategory,
+                      label: categoriesBySlug[selectedCategory].name,
+                    }
+                  : null
+              }
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              onChange={(_, value) => {
+                onCategoryChange(value ? value.id : null);
+                setAnchorEl(null);
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  size="small"
+                  label="Product Category"
+                  inputRef={inputRef}
+                />
+              )}
+            />
+          </Paper>
+        </Box>
+      </Popover>
+    </>
+  );
+}
+
 function ProductsTableHead({
   orderBy,
   order,
@@ -236,14 +313,6 @@ function ProductsTableHead({
   onCategoryChange,
   categoriesLoaded,
 }) {
-  // Popover state for category filter
-  const [anchorEl, setAnchorEl] = React.useState(null);
-  const inputRef = React.useRef(null);
-  const handlePopoverEntered = () => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-  };
   return (
     <TableHead>
       <TableRow>
@@ -275,70 +344,12 @@ function ProductsTableHead({
               </span>
             </Tooltip>
             {headCell.id === "category" && categoriesLoaded && (
-              <>
-                <Tooltip title="Filter by category" arrow>
-                  <span>
-                    <IconButton
-                      color="default"
-                      size="small"
-                      aria-label="Filter categories"
-                      onClick={(e) => setAnchorEl(e.currentTarget)}
-                    >
-                      {selectedCategory ? (
-                        <FilterAltIcon />
-                      ) : (
-                        <FilterListIcon />
-                      )}
-                    </IconButton>
-                  </span>
-                </Tooltip>
-                <Popover
-                  id="filter-popover"
-                  open={Boolean(anchorEl)}
-                  anchorEl={anchorEl}
-                  onClose={() => setAnchorEl(null)}
-                  anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-                  slotProps={{
-                    transition: { onEntered: handlePopoverEntered },
-                  }}
-                >
-                  <Box sx={{ p: 1 }}>
-                    <Paper>
-                      <Autocomplete
-                        openOnFocus
-                        options={categories.map((category) => ({
-                          id: category.slug,
-                          label: category.name,
-                        }))}
-                        sx={{ width: 300 }}
-                        value={
-                          selectedCategory && categoriesBySlug[selectedCategory]
-                            ? {
-                                id: selectedCategory,
-                                label: categoriesBySlug[selectedCategory].name,
-                              }
-                            : null
-                        }
-                        isOptionEqualToValue={(option, value) =>
-                          option.id === value.id
-                        }
-                        onChange={(_, value) => {
-                          onCategoryChange(value ? value.id : null);
-                          setAnchorEl(null);
-                        }}
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            size="small"
-                            label="Product Category"
-                            inputRef={inputRef}
-                          />
-                        )}
-                      />
-                    </Paper>
-                  </Box>
-                </Popover>
-              </>
+              <CategoryFilterPopover
+                categories={categories}
+                categoriesBySlug={categoriesBySlug}
+                selectedCategory={selectedCategory}
+                onCategoryChange={onCategoryChange}
+              />
             )}
           </TableCell>
         ))}
